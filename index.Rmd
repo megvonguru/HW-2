@@ -1,0 +1,200 @@
+---
+title: An R Markdown document converted from "Meg_Applying_Fun_R.ipynb"
+output: html_document
+---
+
+# Applying functions in R
+
+Installing to tead Excel files:
+
+```{r}
+# install.packages('rio') #installation was not required as it was done in Assignment 1
+```
+
+# reading data
+
+```{r}
+# get the link for where the excel file is located
+linkGit="https://github.com/megvonguru/HW-2/raw/refs/heads/main/FSI-2023-DOWNLOAD.xlsx"
+
+
+# library(rio) # package needed
+# from the link above, import the file and save it under the name fragility23
+fragility23=rio::import(file = linkGit) #object that will hold the result
+```
+
+```{r}
+# display the content of fragility 23 in a readable format 
+str(fragility23)
+```
+
+## Apply square root function?
+
+```{r}
+# whole DF?
+# sqrt(fragility23)
+```
+
+```{r}
+# several columns (only numerical)
+
+# calculate the square root for columns 4 and 5
+sqrt(fragility23[,4:5])
+```
+
+```{r}
+# one column
+# calculate the square root of each value in the column total
+sqrt(fragility23$Total)
+```
+
+```{r}
+# one value
+# calculate the square root of the first element of the column total
+sqrt(fragility23$Total[1])
+```
+
+## Applying **sum()**:
+
+```{r}
+# sum everything
+# calculate the sum of all values for columns 4 and 5
+sum(fragility23[,4:5])
+```
+
+```{r}
+# sum by column
+# calculate the sum of the columns 4 and 5 and then print the data
+print(apply(fragility23[,4:5],2,sum))
+```
+
+```{r}
+#notice
+# find the sum of columns 4 and 5 and then identify the type of data that is returned 
+typeof(apply(fragility23[,4:5],2,sum))
+```
+
+If you do not see **list**, then it is a vector. ⏫
+
+```{r}
+# sum by row
+# calculate the sum of rows 4 and 5 and then print the output
+print(apply(fragility23[,4:5],1,sum))
+```
+
+### Apply by iterating:
+
+```{r}
+# calculate the sum of all values in the 4th and 5th column and then print them as a list
+print(lapply(fragility23[,4:5],sum))
+```
+
+Notice output of **lapply**:
+
+```{r}
+# apply the sum function on columns 4 and 5 and identify the type of internal storage of the returned list
+typeof(lapply(fragility23[,4:5],sum))
+```
+
+```{r}
+# apply the sum function on columns 4 and 5 and identify the type of high level storage of the returned list
+class(lapply(fragility23[,4:5],sum))
+```
+
+Notice output of **sapply**:
+
+```{r}
+# calculate the sum of the elements of the columns in 4 and 5 and print the results in a vector format
+print(sapply(fragility23[,4:5],sum))
+```
+
+```{r}
+# calculate the sum of the elements of the columns in 4 and 5 and identify the high storage type
+class(sapply(fragility23[,4:5],sum))
+```
+
+Similarly:
+
+```{r}
+# do the square root of the elements of the columns in 4 and 5 and then print the list
+print(lapply(fragility23[,4:5],sqrt))
+```
+
+```{r}
+# do the square root of the elements of the columns in 4 and 5 and then return the data type of the list
+class(lapply(fragility23[,4:5],sqrt))
+```
+
+```{r}
+# do the square root of the elements of the columns in 4 and 5 and then print the data in the vector format
+print(sapply(fragility23[,4:5],sqrt))
+```
+
+```{r}
+# do the square root of the elements of the columns in 4 and 5 and then return the type of the vector
+class(sapply(fragility23[,4:5],sqrt))
+```
+
+Now our own function:
+
+```{r}
+# create a function called theOnesOK with input parameter DF_country_and variable
+theOnesOK = function(DF_country_and_variable) {
+  # take the 2nd column of the input list and save it under variable_values
+  variable_values <- DF_country_and_variable[,2]
+  # calculate the average of the elements that do not have any missing data and save it under avg_value  
+  avg_value <- mean(variable_values, na.rm = TRUE)
+  # if the value is greater than the average, label it as Above Average. Otherwise label it as Below/At Average. 
+  is_above <- ifelse(variable_values > avg_value, "Above Average", "Below/At Average")
+  # create a new column called Status and store all the Above Average data
+  DF_country_and_variable$Status <- is_above
+  # return the orginal list with the new status column 
+  return(DF_country_and_variable)
+}
+```
+
+```{r}
+# call the function theOnesOK with columns Country and Demographic Pressures 
+theOnesOK(fragility23[,c('Country','S1: Demographic Pressures')])
+```
+
+# the function to compute the row wise average across the given columns and return the new data frame with country column and the average
+```{r}
+# create a function with the name mystery with input parameters data frame, vector of columns and the country column which has as a default value of country
+mystery=function(DF,positionsToUse,CountryColumn='Country'){
+  # extract the country column from DF and ignore it if its not a vector
+  newDF=DF[,c(CountryColumn),drop = FALSE]
+  # create a new column named average 
+  average='average'
+  # calculate the average for each row and save it under the new column average
+  newDF[,average]=apply(DF[,positionsToUse],1,mean,na.rm = TRUE)
+  # return the country identifier as well as row wise average
+  return(newDF[,c(CountryColumn,average)])
+}
+```
+
+```{r}
+# extract the specific columns total and S1
+fragility23[,c('Total',	'S1: Demographic Pressures')]
+```
+# New Function theOnesOK2
+# function will label each row as above or below the average based on the chosen variable
+# in the original theOnesOK function, the row was being labeled as above or below based on column 2 but not on the chosen variable
+```{r}
+# create a function by the name theOnesOk2 
+theOnesOK2 = function(DF, DFvariable, CountryColumn='Country') {
+  # extract the variable and save it in variable_values
+  variable_values <- DF[,DFvariable]
+  # calculate the average of the elements listed in variable values
+  avg_value <- mean(variable_values, na.rm = TRUE)
+  # if the value is greater than the average, label it as Above Average. Otherwise label it as Below/At Average. 
+  is_above <- ifelse(variable_values > avg_value, "Above Average", "Below/At Average")
+  # create a new column name as Status_on <column name>
+  newname = paste('Status_on', DFvariable)
+  # add the new status into the data frame 
+  DF[,newname] <- is_above 
+  # return the country identifier along with the status column 
+  return(DF[,c(CountryColumn, newname)])
+}
+```
+
